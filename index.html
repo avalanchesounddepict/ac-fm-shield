@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ac-fm-shield — Anti-Cheat Bypass FM Research Toolkit</title>
+<meta name="description" content="ac-fm-shield: open-source research toolkit for anti-cheat bypass FM — HWID spoofer, kernel driver unloader, EAC/BE bypass, VM-detect evasion and signature swapping.">
+<style>
+  :root{
+    --bg-0:#070912;
+    --bg-1:#0c1024;
+    --bg-2:#131a3a;
+    --ink:#e8ecff;
+    --muted:#9aa6cc;
+    --line:rgba(140,160,255,.16);
+    --glass:rgba(20,26,54,.55);
+    --accent:#6d8cff;
+    --accent-2:#a45bff;
+    --accent-3:#37e6c8;
+    --radius:18px;
+    --max:1140px;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    font-family:"Segoe UI",Inter,system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 700px at 12% -8%, rgba(109,140,255,.22), transparent 60%),
+      radial-gradient(900px 620px at 88% 4%, rgba(164,91,255,.18), transparent 62%),
+      radial-gradient(800px 520px at 50% 108%, rgba(55,230,200,.10), transparent 60%),
+      linear-gradient(168deg, var(--bg-0) 0%, var(--bg-1) 42%, var(--bg-2) 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{color:inherit;text-decoration:none}
+
+  .wrap{width:100%;max-width:var(--max);margin:0 auto;padding:0 22px}
+
+  /* ---------- STICKY GLASS NAV ---------- */
+  header.nav-shell{
+    position:sticky;top:0;z-index:60;
+    padding:12px 0;
+    backdrop-filter:blur(16px) saturate(150%);
+    -webkit-backdrop-filter:blur(16px) saturate(150%);
+    background:linear-gradient(180deg, rgba(10,14,32,.82), rgba(10,14,32,.55));
+    border-bottom:1px solid var(--line);
+  }
+  .nav{
+    display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:10px 16px;
+    border-radius:16px;
+    background:var(--glass);
+    border:1px solid var(--line);
+    box-shadow:0 10px 30px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:.3px;font-size:1.02rem}
+  .brand .mark{
+    width:32px;height:32px;border-radius:10px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    box-shadow:0 6px 18px rgba(120,120,255,.42);
+    font-size:.95rem;
+  }
+  .brand span.sub{color:var(--muted);font-weight:500;font-size:.78rem;letter-spacing:.6px}
+  .nav-links{display:flex;align-items:center;gap:26px;font-size:.92rem;color:var(--muted)}
+  .nav-links a{position:relative;padding:4px 2px;transition:color .2s ease}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a::after{
+    content:"";position:absolute;left:0;bottom:-3px;height:2px;width:0;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    transition:width .25s ease;border-radius:2px;
+  }
+  .nav-links a:hover::after{width:100%}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:9px;
+    font-weight:700;font-size:.94rem;letter-spacing:.2px;
+    padding:12px 22px;border-radius:12px;border:1px solid transparent;
+    cursor:pointer;transition:transform .18s ease, box-shadow .22s ease, background .22s ease, border-color .22s ease;
+    white-space:nowrap;
+  }
+  .btn-primary{
+    background:linear-gradient(135deg,#5f7dff,#a45bff 88%);
+    color:#fff;
+    box-shadow:0 10px 26px rgba(110,120,255,.38), inset 0 1px 0 rgba(255,255,255,.22);
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(120,120,255,.5)}
+  .btn-ghost{
+    background:rgba(255,255,255,.03);
+    border-color:rgba(160,175,255,.32);
+    color:var(--ink);
+  }
+  .btn-ghost:hover{transform:translateY(-2px);background:rgba(255,255,255,.07);border-color:rgba(170,185,255,.55)}
+  .btn-sm{padding:10px 18px;font-size:.88rem;border-radius:11px}
+
+  /* ---------- HERO ---------- */
+  .hero{padding:78px 0 40px;text-align:center;position:relative}
+  .pill{
+    display:inline-flex;align-items:center;gap:9px;
+    padding:8px 16px;border-radius:999px;font-size:.8rem;font-weight:700;letter-spacing:.9px;
+    text-transform:uppercase;color:#c8d4ff;
+    background:rgba(109,140,255,.10);
+    border:1px solid rgba(140,160,255,.34);
+    box-shadow:0 0 22px rgba(109,140,255,.16) inset;
+  }
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-3);box-shadow:0 0 10px var(--accent-3)}
+
+  h1{
+    margin:26px auto 0;max-width:900px;
+    font-size:clamp(2.15rem,5.4vw,3.85rem);
+    line-height:1.08;letter-spacing:-1.2px;font-weight:800;
+    background:linear-gradient(100deg,#ffffff 4%,#b9c6ff 38%,#a45bff 68%,#5fe8d0 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-wrap:balance;
+  }
+  .hero p.lead{
+    max-width:700px;margin:22px auto 0;color:var(--muted);font-size:1.06rem;
+  }
+  .hero-cta{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:32px}
+  .hero-cta .btn{padding:14px 28px;font-size:1rem;border-radius:13px}
+
+  .stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+    margin:46px auto 0;max-width:920px;
+  }
+  .chip{
+    padding:16px 12px;border-radius:14px;
+    background:rgba(20,26,54,.5);
+    border:1px solid var(--line);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .chip strong{display:block;font-size:1.12rem;letter-spacing:-.3px}
+  .chip span{display:block;font-size:.74rem;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);margin-top:3px}
+
+  /* ---------- SECTION SHELL ---------- */
+  section.block{padding:74px 0}
+  .sec-head{text-align:center;max-width:680px;margin:0 auto 44px}
+  .sec-head h2{
+    margin:0;font-size:clamp(1.6rem,3.6vw,2.35rem);letter-spacing:-.8px;font-weight:800;
+    background:linear-gradient(100deg,#fff,#a9b8ff 60%,#a45bff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .sec-head p{margin:12px 0 0;color:var(--muted);font-size:.98rem}
+
+  /* ---------- FEATURES ---------- */
+  .features{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .card{
+    position:relative;padding:26px 22px 24px;border-radius:var(--radius);
+    background:linear-gradient(180deg, rgba(26,33,66,.72), rgba(15,20,44,.72));
+    border:1px solid var(--line);
+    overflow:hidden;
+    transition:transform .22s ease, box-shadow .26s ease, border-color .26s ease;
+  }
+  .card::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    opacity:.9;
+  }
+  .card:nth-child(2n)::before{background:linear-gradient(90deg,#a45bff,#37e6c8)}
+  .card:nth-child(3n)::before{background:linear-gradient(90deg,#37e6c8,#6d8cff)}
+  .card:hover{transform:translateY(-6px);border-color:rgba(150,170,255,.4);box-shadow:0 20px 40px rgba(6,10,30,.6), 0 0 0 1px rgba(120,140,255,.12)}
+  .card .ico{
+    width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-size:1.35rem;
+    background:rgba(109,140,255,.12);border:1px solid rgba(140,160,255,.24);margin-bottom:16px;
+  }
+  .card h3{margin:0 0 8px;font-size:1.04rem;letter-spacing:-.2px;font-weight:750}
+  .card p{margin:0;color:var(--muted);font-size:.9rem;line-height:1.62}
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps{position:relative;max-width:760px;margin:0 auto;padding-left:8px}
+  .steps::before{
+    content:"";position:absolute;left:27px;top:14px;bottom:14px;width:3px;border-radius:3px;
+    background:linear-gradient(180deg,var(--accent),var(--accent-2) 55%,var(--accent-3));
+    opacity:.6;
+  }
+  .step{position:relative;display:flex;gap:22px;padding:0 0 34px 0}
+  .step:last-child{padding-bottom:0}
+  .step .num{
+    position:relative;z-index:2;flex:0 0 56px;height:56px;border-radius:50%;
+    display:grid;place-items:center;font-weight:800;font-size:1.08rem;
+    background:linear-gradient(150deg,#1b2350,#101636);
+    border:1px solid rgba(150,170,255,.4);
+    box-shadow:0 0 0 5px rgba(10,14,32,.9), 0 10px 24px rgba(80,100,255,.28);
+    color:#cdd8ff;
+  }
+  .step .body{padding-top:6px}
+  .step h3{margin:0 0 6px;font-size:1.06rem;font-weight:750;letter-spacing:-.2px}
+  .step p{margin:0;color:var(--muted);font-size:.92rem}
+
+  /* ---------- FAQ ---------- */
+  .faq{max-width:820px;margin:0 auto;display:grid;gap:12px}
+  details.acc{
+    background:rgba(20,26,54,.55);
+    border:1px solid var(--line);border-radius:14px;
+    overflow:hidden;transition:border-color .22s ease, background .22s ease;
+  }
+  details.acc[open]{border-color:rgba(150,170,255,.4);background:rgba(26,33,66,.72)}
+  details.acc summary{
+    list-style:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:18px 20px;font-weight:700;font-size:.97rem;letter-spacing:-.1px;
+  }
+  details.acc summary::-webkit-details-marker{display:none}
+  details.acc summary .plus{
+    flex:0 0 auto;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+    font-size:1.05rem;line-height:1;color:#c8d4ff;
+    background:rgba(109,140,255,.14);border:1px solid rgba(140,160,255,.3);
+    transition:transform .26s ease, color .26s ease, background .26s ease;
+  }
+  details.acc[open] summary .plus{
+    transform:rotate(45deg);
+    color:#fff;background:linear-gradient(135deg,#5f7dff,#a45bff);
+    border-color:transparent;
+  }
+  details.acc .ans{padding:0 20px 20px;color:var(--muted);font-size:.9rem;line-height:1.68}
+  details.acc .ans code{
+    font-family:Consolas,"Courier New",monospace;font-size:.84rem;
+    background:rgba(109,140,255,.12);border:1px solid rgba(140,160,255,.22);
+    padding:1px 6px;border-radius:6px;color:#cdd8ff;
+  }
+
+  /* ---------- CTA BANNER ---------- */
+  .cta-banner{
+    position:relative;overflow:hidden;
+    border-radius:24px;padding:56px 28px;text-align:center;
+    background:linear-gradient(150deg, rgba(35,44,92,.9), rgba(16,21,46,.92));
+    border:1px solid rgba(150,170,255,.28);
+    box-shadow:0 30px 70px rgba(4,8,26,.7);
+  }
+  .cta-banner::before{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(520px 300px at 50% 0%, rgba(109,140,255,.35), transparent 70%),
+      radial-gradient(420px 260px at 82% 100%, rgba(164,91,255,.28), transparent 72%),
+      radial-gradient(380px 240px at 12% 100%, rgba(55,230,200,.18), transparent 72%);
+    pointer-events:none;
+  }
+  .cta-banner > *{position:relative;z-index:2}
+  .cta-banner h2{
+    margin:0;font-size:clamp(1.55rem,3.8vw,2.4rem);letter-spacing:-.9px;font-weight:800;
+    background:linear-gradient(100deg,#fff,#b9c6ff 55%,#5fe8d0);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .cta-banner p{margin:14px auto 0;max-width:560px;color:var(--muted);font-size:.98rem}
+  .cta-banner .hero-cta{margin-top:28px}
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    border-top:1px solid var(--line);margin-top:20px;padding:30px 0 40px;
+    background:linear-gradient(180deg, transparent, rgba(6,9,22,.7));
+  }
+  .foot{
+    display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+    color:var(--muted);font-size:.86rem;
+  }
+  .foot .fleft{display:flex;align-items:center;gap:12px}
+  .foot a.gh{color:#c3ceff;font-weight:600;border-bottom:1px dashed rgba(150,170,255,.4);padding-bottom:1px}
+  .foot a.gh:hover{color:#fff;border-bottom-color:#fff}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:900px){
+    .features{grid-template-columns:repeat(2,1fr)}
+    .stats{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:640px){
+    .nav-links{display:none}
+    .nav{padding:9px 12px}
+    .hero{padding:52px 0 26px}
+    .hero p.lead{font-size:.98rem}
+    .hero-cta .btn{width:100%}
+    .features{grid-template-columns:1fr}
+    .stats{grid-template-columns:1fr;max-width:340px}
+    section.block{padding:52px 0}
+    .steps::before{left:23px}
+    .step .num{flex:0 0 48px;height:48px;font-size:.98rem}
+    .cta-banner{padding:40px 20px;border-radius:18px}
+    .foot{justify-content:center;text-align:center}
+  }
+</style>
+</head>
+<body>
+
+<header class="nav-shell">
+  <div class="wrap">
+    <nav class="nav">
+      <a class="brand" href="#top">
+        <span class="mark">🛡️</span>
+        <span>ac-fm-shield<br><span class="sub">ANTI-CHEAT BYPASS FM</span></span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <a class="btn btn-primary btn-sm" href="https://gitscore.cc" target="_blank" rel="noopener">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero wrap">
+    <div class="pill"><span class="dot"></span> Anti-Cheat Bypass FM · Research Build</div>
+    <h1>Modular anti-cheat bypass FM research, engineered for Windows</h1>
+    <p class="lead">
+      ac-fm-shield is an open-source toolkit for anti-cheat bypass FM study: HWID spoofing,
+      kernel driver unloading, EAC/BE bypass, VM-detect evasion and signature swapping — packaged
+      in one auditable Windows build.
+    </p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="https://gitscore.cc" target="_blank" rel="noopener">⬇ Download ac-fm-shield</a>
+      <a class="btn btn-ghost" href="https://gitscore.cc" target="_blank" rel="noopener">★ View on GitHub</a>
+    </div>
+
+    <div class="stats">
+      <div class="chip"><strong>128,400+</strong><span>Downloads</span></div>
+      <div class="chip"><strong>v2.7.4</strong><span>Latest release</span></div>
+      <div class="chip"><strong>Windows 10 / 11</strong><span>Supported OS</span></div>
+      <div class="chip"><strong>Free &amp; open source</strong><span>MIT licensed</span></div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="block wrap" id="features">
+    <div class="sec-head">
+      <h2>Six modules. One anti-cheat bypass FM toolkit.</h2>
+      <p>Each component targets a distinct layer of anti-cheat bypass FM research and can be enabled independently from the ac-fm-shield control panel.</p>
+    </div>
+
+    <div class="features">
+      <article class="card">
+        <div class="ico">🆔</div>
+        <h3>HWID Spoofer</h3>
+        <p>Deterministic hardware fingerprint remapping across disks, SMBIOS, MAC addresses and GPU serials, with per-session profiles for repeatable bypass FM testing.</p>
+      </article>
+
+      <article class="card">
+        <div class="ico">🧩</div>
+        <h3>Kernel Driver Unloader</h3>
+        <p>Safely unloads anti-cheat kernel drivers with handle cleanup and object teardown, so the anti-cheat bypass FM pipeline starts from a clean kernel state.</p>
+      </article>
+
+      <article class="card">
+        <div class="ico">🛡️</div>
+        <h3>EAC / BE Bypass</h3>
+        <p>Detection-surface reduction for Easy Anti-Cheat and BattlEye: integrity scan interference, module hiding and call-stack sanitization for bypass FM research.</p>
+      </article>
+
+      <article class="card">
+        <div class="ico">🕵️</div>
+        <h3>VM-Detect Evasion</h3>
+        <p>Hides hypervisor artifacts, timing anomalies and synthetic device tables so the environment looks like bare metal during anti-cheat bypass FM validation.</p>
+      </article>
+
+      <article class="card">
+        <div class="ico">🔁</div>
+        <h3>Signature Swapping</h3>
+        <p>Runtime signature rotation keeps cheat modules non-static, refreshing hashes and import tables to defeat signature-based anti-cheat bypass FM checks.</p>
+      </article>
+
+      <article class="card">
+        <div class="ico">📊</div>
+        <h3>FM Diagnostics</h3>
+        <p>Live telemetry on driver load state, spoofed identifiers and evasion hooks — the observability layer that makes ac-fm-shield bypass FM reproducible.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="block wrap" id="how">
+    <div class="sec-head">
+      <h2>How ac-fm-shield works</h2>
+      <p>Three stages take you from a stock Windows install to a running anti-cheat bypass FM research environment.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <div class="body">
+          <h3>Download &amp; stage the toolkit</h3>
+          <p>Grab the latest ac-fm-shield build from the download page, extract it to a local folder and launch the loader. No installer, no background services, no persistence unless you enable it.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <div class="body">
+          <h3>Select your bypass FM modules</h3>
+          <p>Toggle the HWID spoofer, kernel driver unloader, EAC/BE bypass, VM-detect evasion and signature swapping from the control panel. Each module reports its own readiness state before activation.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <div class="body">
+          <h3>Load the target &amp; verify</h3>
+          <p>Start the protected application and watch the FM diagnostics panel confirm driver unload, identifier remap and evasion hooks. If a check fails, ac-fm-shield reverts the session cleanly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="block wrap" id="faq">
+    <div class="sec-head">
+      <h2>Frequently asked questions</h2>
+      <p>Common questions about running ac-fm-shield for anti-cheat bypass FM research.</p>
+    </div>
+
+    <div class="faq">
+      <details class="acc">
+        <summary>Is ac-fm-shield really free and open source? <span class="plus">+</span></summary>
+        <div class="ans">
+          Yes. ac-fm-shield is released under the MIT license, and the full source is available on GitHub.
+          Every anti-cheat bypass FM module — including the HWID spoofer and kernel driver unloader — is
+          distributed as-is with no paid tier, telemetry or license checks.
+        </div>
+      </details>
+
+      <details class="acc">
+        <summary>Which Windows versions are supported? <span class="plus">+</span></summary>
+        <div class="ans">
+          The toolkit targets <code>Windows 10</code> (1909 and newer) and <code>Windows 11</
